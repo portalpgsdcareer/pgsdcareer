@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduKarier PGSD | Portal Informasi Karier Guru SD</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Marked.js untuk memformat output Markdown dari Gemini -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                        },
+                        secondary: '#f59e0b',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Styles for Timeline */
+        .timeline-container {
+            position: relative;
+        }
+        .timeline-container::after {
+            content: '';
+            position: absolute;
+            width: 4px;
+            background-color: #dbeafe;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            margin-left: -2px;
+        }
+        .timeline-item {
+            position: relative;
+            background-color: inherit;
+            width: 50%;
+        }
+        .timeline-item.left {
+            left: 0;
+        }
+        .timeline-item.right {
+            left: 50%;
+        }
+        /* Circles on the timeline */
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            right: -12px;
+            background-color: white;
+            border: 4px solid #2563eb;
+            top: 15px;
+            border-radius: 50%;
+            z-index: 1;
+        }
+        .timeline-item.right::after {
+            left: -12px;
+        }
+        
+        /* Mobile adjustment for timeline */
+        @media screen and (max-width: 768px) {
+            .timeline-container::after {
+                left: 31px;
+            }
+            .timeline-item {
+                width: 100%;
+                padding-left: 70px;
+                padding-right: 25px;
+            }
+            .timeline-item.left, .timeline-item.right {
+                left: 0;
+            }
+            .timeline-item.left::after, .timeline-item.right::after {
+                left: 19px;
+            }
+            .timeline-item.left .timeline-content, .timeline-item.right .timeline-content {
+                text-align: left;
+            }
+        }
+
+        /* Smooth scroll */
+        html { scroll-behavior: smooth; }
+        
+        /* Fade in animation classes */
+        .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+        .fade-in.appear { opacity: 1; transform: translateY(0); }
+
+        /* Custom Scrollbar for horizontal maps */
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        
+        /* Tab Navigation Styles */
+        .tab-btn {
+            border-color: transparent;
+            background-color: #f9fafb;
+            color: #4b5563;
+            transition: all 0.3s ease;
+        }
+        .tab-btn:hover {
+            background-color: #f3f4f6;
+        }
+        .tab-btn.active {
+            border-color: #2563eb;
+            background-color: #ffffff;
+            color: #1d4ed8;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .tab-btn .tab-bg { opacity: 0; transition: opacity 0.3s ease; }
+        .tab-btn.active .tab-bg { opacity: 1; }
+        
+        .tab-content {
+            display: none;
+            animation: fadeInTab 0.5s ease-out forwards;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeInTab {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Tambahan Style untuk Accordion & Modal */
+        .accordion-content {
+            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, padding 0.3s ease-in-out;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        .accordion-content.open {
+            max-height: 500px;
+            opacity: 1;
+        }
+        
+        /* Hide scrollbar for clean modal */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="font-sans bg-gray-50 text-gray-800 antialiased overflow-x-hidden" style="overflow: hidden;">
+
+    <!-- Intro Door Animation -->
+    <div id="intro-doors" class="fixed inset-0 z-[9999] flex overflow-hidden bg-gray-900 transition-opacity duration-700">
+        <!-- Left Door -->
+        <div id="door-left" class="w-1/2 h-full bg-gradient-to-br from-primary-900 to-gray-900 border-r-[8px] border-yellow-600/80 flex items-center justify-end relative transition-transform duration-[1500ms] ease-[cubic-bezier(0.77,0,0.175,1)] shadow-[20px_0_50px_rgba(0,0,0,0.6)] z-10">
+            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] opacity-20 mix-blend-overlay"></div>
+            <!-- Door Handle -->
+            <div class="mr-4 md:mr-8 w-6 h-32 md:w-8 md:h-48 bg-gradient-to-b from-yellow-300 to-yellow-600 rounded-l-full shadow-inner border border-yellow-400 relative z-20 cursor-pointer hover:brightness-125 transition-all flex items-center justify-center group" onclick="openMagicDoors()">
+                <div class="w-2 h-16 bg-yellow-800/60 rounded-full group-hover:bg-yellow-700 transition-colors"></div>
+            </div>
+        </div>
+        
+        <!-- Right Door -->
+        <div id="door-right" class="w-1/2 h-full bg-gradient-to-bl from-primary-900 to-gray-900 border-l-[8px] border-yellow-600/80 flex items-center justify-start relative transition-transform duration-[1500ms] ease-[cubic-bezier(0.77,0,0.175,1)] shadow-[-20px_0_50px_rgba(0,0,0,0.6)] z-10">
+            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] opacity-20 mix-blend-overlay"></div>
+            <!-- Door Handle -->
+            <div class="ml-4 md:ml-8 w-6 h-32 md:w-8 md:h-48 bg-gradient-to-b from-yellow-300 to-yellow-600 rounded-r-full shadow-inner border border-yellow-400 relative z-20 cursor-pointer hover:brightness-125 transition-all flex items-center justify-center group" onclick="openMagicDoors()">
+                 <div class="w-2 h-16 bg-yellow-800/60 rounded-full group-hover:bg-yellow-700 transition-colors"></div>
+            </div>
+        </div>
+        
+        <!-- Glowing Center & Text -->
+        <div id="door-center-content" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center z-30 pointer-events-none transition-opacity duration-500 w-full px-4">
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 md:w-64 md:h-64 bg-yellow-400/20 rounded-full blur-[80px] animate-pulse"></div>
+            <i class="fa-solid fa-book-open-reader text-5xl md:text-7xl text-yellow-400 mb-6 drop-shadow-[0_0_20px_rgba(250,204,21,0.8)]"></i>
+            <h1 class="text-4xl md:text-6xl font-serif text-white font-bold tracking-wider mb-4 drop-shadow-2xl">Gerbang <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500">EduKarier</span></h1>
+            <p class="text-yellow-100 text-sm md:text-lg font-light tracking-wide bg-gray-900/60 py-2.5 px-6 rounded-full backdrop-blur-sm border border-yellow-500/30 inline-block">Sentuh gagang pintu untuk menelusuri masa depanmu</p>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <header class="fixed w-full top-0 z-50 bg-white/90 backdrop-blur-md shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center gap-2 cursor-pointer" onclick="window.scrollTo(0,0)">
+                    <div class="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <span class="font-bold text-2xl text-gray-900 tracking-tight">Edu<span class="text-primary-600">Karier</span></span>
+                </div>
+                
+                <!-- Desktop Menu -->
+                <nav class="hidden md:flex space-x-8">
+                    <a href="#beranda" class="text-gray-600 hover:text-primary-600 font-medium transition-colors">Beranda</a>
+                    <a href="#jalur-karier" class="text-gray-600 hover:text-primary-600 font-medium transition-colors">Jalur Karier</a>
+                    <a href="#peta-tahapan" class="text-gray-600 hover:text-primary-600 font-medium transition-colors">Peta Tahapan</a>
+                    <a href="#persiapan" class="text-gray-600 hover:text-primary-600 font-medium transition-colors">Persiapan</a>
+                    <a href="#tanya-ai" class="text-primary-600 hover:text-primary-800 font-bold transition-colors flex items-center gap-1"><i class="fa-solid fa-sparkles"></i> Tanya AI</a>
+                </nav>
+
+                <!-- CTA Button -->
+                <div class="hidden md:block">
+                    <a href="#peta-tahapan" class="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2.5 rounded-full font-medium transition-all shadow-lg shadow-primary-500/30">
+                        Mulai Perjalanan
+                    </a>
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-gray-600 hover:text-primary-600 focus:outline-none">
+                        <i class="fa-solid fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Panel -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 shadow-lg">
+                <a href="#beranda" class="block px-3 py-2 text-gray-700 hover:text-primary-600 font-medium">Beranda</a>
+                <a href="#jalur-karier" class="block px-3 py-2 text-gray-700 hover:text-primary-600 font-medium">Jalur Karier</a>
+                <a href="#peta-tahapan" class="block px-3 py-2 text-gray-700 hover:text-primary-600 font-medium">Peta Tahapan</a>
+                <a href="#persiapan" class="block px-3 py-2 text-gray-700 hover:text-primary-600 font-medium">Mulai Sekarang</a>
+                <a href="#tanya-ai" class="block px-3 py-2 text-primary-600 font-bold bg-primary-50 rounded-lg mt-2"><i class="fa-solid fa-robot mr-2"></i> Tanya AI EduKarier</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="beranda" class="pt-28 pb-20 lg:pt-36 lg:pb-28 bg-gradient-to-br from-primary-50 via-white to-blue-50 relative overflow-hidden">
+        <!-- Background decorative blobs -->
+        <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-primary-100/50 blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-blue-200/40 blur-3xl"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="fade-in">
+                    <div class="inline-block px-4 py-1.5 rounded-full bg-primary-100 text-primary-700 font-semibold text-sm mb-6 border border-primary-200">
+                        <i class="fa-solid fa-compass mr-2"></i>Kompas Karier Mahasiswa PGSD
+                    </div>
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight mb-6">
+                        Wujudkan Impianmu Menjadi <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-indigo-600">Guru SD Profesional</span>
+                    </h1>
+                    <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+                        Portal informasi komprehensif untuk memandu mahasiswa dan alumni PGSD menemukan jalur karier terbaik: mulai dari CPNS, PPPK, hingga karier cemerlang di Sekolah Swasta Internasional.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <a href="#jalur-karier" class="bg-primary-600 hover:bg-primary-700 text-white px-8 py-3.5 rounded-full font-semibold text-lg text-center transition-all shadow-lg shadow-primary-500/30 flex items-center justify-center gap-2">
+                            Lihat Peluang <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                        <a href="#peta-tahapan" class="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-8 py-3.5 rounded-full font-semibold text-lg text-center transition-all flex items-center justify-center gap-2">
+                            Peta Tahapan
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Hero Image/Illustration Mockup -->
+                <div class="relative fade-in hidden lg:block">
+                    <div class="relative rounded-2xl bg-white shadow-2xl p-2 border border-gray-100 transform rotate-2 hover:rotate-0 transition-transform duration-500">
+                        <img src="https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Guru mengajar di kelas" class="rounded-xl w-full h-[450px] object-cover">
+                        <!-- Floating Badge -->
+                        <div class="absolute -bottom-6 -left-6 bg-white p-4 rounded-xl shadow-xl flex items-center gap-4 animate-bounce" style="animation-duration: 3s;">
+                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-xl">
+                                <i class="fa-solid fa-check-double"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Peluang Karier</p>
+                                <p class="font-bold text-gray-900">Terbuka Lebar</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Jalur Karier Section -->
+    <section id="jalur-karier" class="py-24 bg-gray-50 border-y border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-14 fade-in">
+                <h2 class="text-sm font-bold text-primary-600 uppercase tracking-wide mb-2">Pilihan Masa Depan</h2>
+                <h3 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Eksplorasi Jalur Karier Utama</h3>
+                <p class="text-gray-600 text-lg">Pilih jalur yang ingin kamu ketahui lebih dalam. Pahami detail, alur seleksi, dan strateginya.</p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-8 items-start">
+                
+                <!-- Sidebar Buttons -->
+                <div class="lg:w-1/4 w-full flex flex-col gap-3 fade-in sticky top-28 z-10">
+                    <button onclick="openTab('cpns')" id="btn-cpns" class="tab-btn active w-full text-left px-6 py-5 rounded-2xl border-l-4 font-bold relative overflow-hidden group">
+                        <div class="tab-bg absolute inset-0 bg-blue-50 transform origin-left"></div>
+                        <span class="relative z-10 flex items-center gap-4"><i class="fa-solid fa-building-columns text-2xl w-8 text-center"></i> <span class="text-lg">Guru CPNS</span></span>
+                    </button>
+                    
+                    <button onclick="openTab('pppk')" id="btn-pppk" class="tab-btn font-medium w-full text-left px-6 py-5 rounded-2xl border-l-4 relative overflow-hidden group">
+                        <div class="tab-bg absolute inset-0 bg-emerald-50 transform origin-left"></div>
+                        <span class="relative z-10 flex items-center gap-4"><i class="fa-solid fa-file-signature text-2xl w-8 text-center text-emerald-600"></i> <span class="text-lg">Guru PPPK</span></span>
+                    </button>
+                    
+                    <button onclick="openTab('swasta')" id="btn-swasta" class="tab-btn font-medium w-full text-left px-6 py-5 rounded-2xl border-l-4 relative overflow-hidden group">
+                        <div class="tab-bg absolute inset-0 bg-purple-50 transform origin-left"></div>
+                        <span class="relative z-10 flex items-center gap-4"><i class="fa-solid fa-globe text-2xl w-8 text-center text-purple-600"></i> <span class="text-lg">Sekolah Swasta Internasional</span></span>
+                    </button>
+                </div>
+
+                <!-- Content Area -->
+                <div class="lg:w-3/4 w-full fade-in" style="transition-delay: 100ms;">
+                    
+                    <!-- TAB 1: CPNS -->
+                    <div id="content-cpns" class="tab-content active bg-white rounded-3xl shadow-xl border border-gray-100 p-8 md:p-10">
+                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-100 text-blue-600 text-3xl mb-6">
+                            <i class="fa-solid fa-building-columns"></i>
+                        </div>
+                        <h3 class="text-3xl font-extrabold text-gray-900 mb-4">Guru CPNS (Pegawai Negeri Sipil)</h3>
+                        
+                        <div class="mb-10">
+                            <h4 class="text-lg font-bold text-gray-900 mb-2 border-b-2 border-blue-100 pb-2 inline-block">Definisi Singkat</h4>
+                            <p class="text-gray-600 leading-relaxed mt-2">
+                                CPNS adalah jalur pengabdian paling klasik dan banyak diminati. Menjadi ASN di sekolah negeri memberikan stabilitas kerja jangka panjang, tunjangan pensiun, serta jenjang karier struktural dan fungsional yang sangat jelas. Sangat cocok bagi kamu yang mencari kepastian masa depan dan jaminan hari tua.
+                            </p>
+                        </div>
+
+                        <!-- Map Horizontal Seleksi CPNS -->
+                        <div class="mb-10 bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                            <h4 class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2"><i class="fa-solid fa-route text-blue-500"></i> Tahapan Seleksi CPNS</h4>
+                            <div class="relative w-full overflow-x-auto pb-6 custom-scrollbar">
+                                <div class="min-w-[800px] flex justify-between relative px-4">
+                                    <!-- Line -->
+                                    <div class="absolute top-6 left-12 right-12 h-1 bg-gradient-to-r from-blue-200 via-blue-400 to-blue-200 z-0"></div>
+                                    
+                                    <!-- Nodes -->
+                                    <div class="relative z-10 flex flex-col items-center text-center w-32">
+                                        <div class="w-12 h-12 rounded-full bg-white text-blue-600 flex items-center justify-center text-lg font-bold shadow-md mb-3 ring-4 ring-blue-50">1</div>
+                                        <h5 class="font-bold text-sm text-gray-900">Administrasi</h5>
+                                        <p class="text-xs text-gray-500 mt-1">Daftar portal SSCASN</p>
+                                    </div>
+                                    <div class="relative z-10 flex flex-col items-center text-center w-32">
+                                        <div class="w-12 h-12 rounded-full bg-white text-blue-600 flex items-center justify-center text-lg font-bold shadow-md mb-3 ring-4 ring-blue-50">2</div>
+                                        <h5 class="font-bold text-sm text-gray-900">SKD</h5>
+                                        <p class="text-xs text-gray-500 mt-1">Tes TWK, TIU, TKP</p>
+                                    </div>
+                                    <div class="relative z-10 flex flex-col items-center text-center w-32">
+                                        <div class="w-12 h-12 rounded-full bg-white text-blue-600 flex items-center justify-center text-lg font-bold shadow-md mb-3 ring-4 ring-blue-50">3</div>
+                                        <h5 class="font-bold text-sm text-gray-900">SKB</h5>
+                                        <p class="text-xs text-gray-500 mt-1">Tes Sesuai Bidang</p>
+                                    </div>
+                                    <div class="relative z-10 flex flex-col items-center text-center w-32">
+                                        <div class="w-12 h-12 rounded-full bg-white text-blue-600 flex items-center justify-center text-lg font-bold shadow-md mb-3 ring-4 ring-blue-50">4</div>
+                                        <h5 class="font-bold text-sm text-gray-900">Integrasi</h5>
+                                        <p class="text-xs text-gray-500 mt-1">Penggabungan Nilai</p>
+                                    </div>
+                                    <div class="relative z-10 flex flex-col items-center text-center w-32">
+                                        <div class="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center text-lg font-bold shadow-md mb-3 ring-4 ring-blue-100"><i class="fa-solid fa-flag-checkered"></i></div>
+                                        <h5 class="font-bold text-sm text-gray-900">Pemberkasan</h5>
+                                        <p class="text-xs text-gray-500 mt-1">Penetapan NIP</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kiat Lolos CPNS -->
+                        <div>
+                            <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><i class="fa-solid fa-lightbulb text-yellow-500"></i> Kiat-kiat Lolos & Info Penting CPNS</h4>
+                            <div class="flex flex-col gap-3">
+                                <!-- Accordion 1 -->
+                                <div class="border border-blue-100 rounded-xl bg-blue-50/30 overflow-hidden">
+                                    <button onclick="toggleAccordion('cpns-acc-1')" class="w-full flex justify-between items-center px-5 py-4 text-left hover:bg-blue-50 transition-colors focus:outline-none">
+                                        <span class="font-bold text-blue-900">1. Pilihan Formasi untuk Lulusan PGSD</span>
+                                        <i id="icon-cpns-acc-1" class="fa-solid fa-chevron-down text-blue-500 transition-transform duration-300"></i>
+                                    </button>
+                                    <div id="cpns-acc-1" class="accordion-content px-5">
+                                        <div class="py-4 border-t border-blue-100 text-sm text-gray-700 leading-relaxed">
+                                            <p class="mb-2">Tidak hanya sebatas menjadi Guru Kelas, ijazah S1 PGSD di beberapa kementerian dan instansi daerah juga linier untuk mendaftar formasi teknis pendukung pendidikan, contoh nyatanya:</p>
+                                            <ul class="list-disc ml-5 space-y-1 font-medium text-gray-800">
+                                                <li><strong>Ahli Pertama - Guru Kelas:</strong> Formasi utama di instansi daerah (SD Negeri).</li>
+                                                <li><strong>Pengembang Penilaian Pendidikan:</strong> Formasi di Kemendikbudristek untuk evaluasi kurikulum.</li>
+                                                <li><strong>Pengelola Penyelenggaraan Diklat:</strong> Biasanya terbuka di berbagai kementerian yang memiliki pusat pelatihan.</li>
+                                                <li><strong>Penyuluh Bahasa:</strong> (Tergantung syarat spesifik daerah/instansi).</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Accordion 2 -->
+                                <div class="border border-blue-100 rounded-xl bg-blue-50/30 overflow-hidden">
+                                    <button onclick="toggleAccordion('cpns-acc-2')" class="w-full flex justify-between items-center px-5 py-4 text-left hover:bg-blue-50 transition-colors focus:outline-none">
+                                        <span class="font-bold text-blue-900">2. Pahami Passing Grade SKD & Jebakan TKP</span>
+                                        <i id="icon-cpns-acc-2" class="fa-solid fa-chevron-down text-blue-500 transition-transform duration-300"></i>
+                                    </button>
+                                    <div id="cpns-acc-2" class="accordion-content px-5">
+                                        <div class="py-4 border-t border-blue-100 text-sm text-gray-700 leading-relaxed">
+                                            <p class="mb-2">SKD memiliki ambang batas (Passing Grade) yang wajib dipenuhi seluruhnya. Jika satu saja kurang, Anda langsung gugur meskipun total nilai tinggi.</p>
+                                            <div class="bg-white p-3 rounded border border-gray-200 mt-2">
+                                                <p class="font-bold mb-1">Contoh Ketentuan Nilai (Berdasarkan Kepmenpan RB terbaru):</p>
+                                                <ul class="list-disc ml-5 space-y-1">
+                                                    <li><strong>TWK (Tes Wawasan Kebangsaan):</strong> Ambang batas 65.</li>
+                                                    <li><strong>TIU (Tes Intelegensia Umum):</strong> Ambang batas 80.</li>
+                                                    <li><strong>TKP (Tes Karakteristik Pribadi):</strong> Ambang batas 166.</li>
+                                                </ul>
+                                            </div>
+                                            <p class="mt-2 italic text-red-600">*Tips: Fokus penuhi TKP terlebih dahulu karena soalnya panjang namun tidak ada jawaban yang poinnya 0 (poin 1 sampai 5).</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Accordion 3 -->
+                                <div class="border border-blue-100 rounded-xl bg-blue-50/30 overflow-hidden">
+                                    <button onclick="toggleAccordion('cpns-acc-3')" class="w-full flex justify-between items-center px-5 py-4 text-left hover:bg-blue-50 transition-colors focus:outline-none">
+                                        <span class="font-bold text-blue-900">3. Keistimewaan Sertifikat Pendidik (Serdik)</span>
+                                        <i id="icon-cpns-acc-3" class="fa-solid fa-chevron-down text-blue-500 transition-transform duration-300"></i>
+                                    </button>
+                                    <div id="cpns-acc-3" class="accordion-content px-5">
+                                        <div class="py-4 border-t border-blue-100 text-sm text-gray-700 leading-relaxed">
+                                            <p>Jika Anda merupakan lulusan PPG (Pendidikan Profesi Guru) dan telah memiliki <strong>Sertifikat Pendidik (Serdik)</strong> yang linier dengan formasi, Anda memegang "kartu As" di tahap SKB (Seleksi Kompetensi Bidang).</p>
+                                            <p class="mt-2 bg-blue-100/50 p-3 rounded-lg border border-blue-200 text-blue-800 font-medium">
+                                                Contoh Nyata: Saat Anda lolos SKD dan masuk ke tahap SKB, peserta dengan Serdik linier otomatis akan mendapatkan poin SKB maksimal (Poin 100). Anda secara praktis hampir dipastikan lolos menjadi CPNS jika nilai SKD mencukupi!
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: PPPK -->
+                    <div id="content-pppk" class="tab-content bg-white rounded-3xl shadow-xl border border-gray-100 p-8 md:p-10">
+                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-600 text-3xl mb-6">
+                            <i class="fa-solid fa-file-signature"></i>
+                        </div>
+                        <h3 class="text-3xl font-extrabold text-gray-900 mb-4">Guru PPPK (Pegawai Pemerintah)</h3>
+                        
+                        <div class="mb-10">
+                            <h4 class="text-lg font-bold text-gray-900 mb-2 border-b-2 border-emerald-100 pb-2 inline-block">Definisi Singkat</h4>
+                            <p class="text-gray-600 leading-relaxed mt-2">
+                                PPPK (Pegawai Pemerintah dengan Perjanjian Kerja) adalah alternatif modern ASN. Formasinya jauh lebih banyak dibandingkan CPNS, dengan fokus merekrut guru yang siap kerja. Gaji dan tunjangan yang didapat setara dengan PNS, bedanya hanya pada skema kontrak (biasanya 1-5 tahun dan dapat terus diperpanjang) dan tidak adanya pensiun konvensional.
+                            </p>
+                        </div>
+
+                        <!-- Map Horizontal Seleksi PPPK -->
+                        <div class="mb-10 bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                            <h4 class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2"><i class="fa-solid fa-route text-emerald-500"></i> Tahapan Seleksi PPPK</h4>
+                            <div class="relative w-full overflow-x-auto pb-6 custom-scrollbar">
+                                <div class="min-w-[800px] flex justify-between relative px-4">
+                                    <!-- Line -->
+                                    <div class="absolute top-6 left-12 right-12 h-1 bg-gradient-to-r from-emerald-200 via-emerald-400 to-emerald-200 z-0"></div>
+                                    
+                                    <!-- Nodes -->
+                                    <div class="relative z-10 flex flex-col items-center text-center w-32">
+                                        <div class="w-12 h-12 rounded-full bg-white text-emerald-600 flex items-center justify-center text-lg font-bold shadow-md mb-3 ring-4 ring-emerald-50">1</div>
+                                        <h5 class="font-bold text-sm text-gray-900">Pembuatan Akun</h5>
+                                        <p class="text-xs text-gray-500 mt-1">Portal SSCASN</p>
+                                    </div>
+                                    <div class="relative z-10 flex flex-col items-center text-center w-32">
+                                        <div class="w-12 h-12 rounded-full bg-white text-emerald-600 flex items-center justify-center text-lg font-bold shadow-md mb-3 ring-4 ring-emerald-50">2</div>
+                                        <h5 class="font-bold text-sm text-gray-900">Administrasi</h5>
+                                        <p class="text-xs text-gray-500 mt-1">Linieritas Ijazah</p>
+                                    </div>
+                                    <div class="relative z-10 flex flex-col items-center text-center w-32">
+                                        <div class="w-12 h-12 rounded-full bg-white text-emerald-600 flex items-center justify-center text-lg font-bold shadow-md mb-3 ring-4 ring-emerald-50">3</div>
+                                        <h5 class="font-bold text-sm text-gray-900">Komp. Teknis</h5>
+                                        <p class="text-xs text-gray-500 mt-1">Ujian Pedagogik</p>
+                                    </div>
+                                    <div class="relative z-10 flex flex-col items-center text-center w-32">
+                                        <div class="w-12 h-12 rounded-full bg-white text-emerald-600 flex items-center justify-center text-lg font-bold shadow-md mb-3 ring-4 ring-emerald-50">4</div>
+                                        <h5 class="font-bold text-sm text-gray-900">Manajerial</h5>
+                                        <p class="text-xs text-gray-500 mt-1">Sosial Kultural</p>
+                                    </div>
+                                    <div class="relative z-10 flex flex-col items-center text-center w-32">
+                                        <div class="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center text-lg font-bold shadow-md mb-3 ring-4 ring-emerald-100"><i class="fa-solid fa-handshake"></i></div>
+                                        <h5 class="font-bold text-sm text-gray-900">Wawancara</h5>
+                                        <p class="text-xs text-gray-500 mt-1">Tertulis di Sistem</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kiat Lolos PPPK -->
+                        <div>
+                            <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><i class="fa-solid fa-lightbulb text-yellow-500"></i> Kiat-kiat Lolos & Info Penting PPPK</h4>
+                            <div class="flex flex-col gap-3">
+                                <!-- Accordion 1 -->
+                                <div class="border border-emerald-100 rounded-xl bg-emerald-50/30 overflow-hidden">
+                                    <button onclick="toggleAccordion('pppk-acc-1')" class="w-full flex justify-between items-center px-5 py-4 text-left hover:bg-emerald-50 transition-colors focus:outline-none">
+                                        <span class="font-bold text-emerald-900">1. Cara Cek Validitas Ijazah di Info GTK</span>
+                                        <i id="icon-pppk-acc-1" class="fa-solid fa-chevron-down text-emerald-500 transition-transform duration-300"></i>
+                                    </button>
+                                    <div id="pppk-acc-1" class="accordion-content px-5">
+                                        <div class="py-4 border-t border-emerald-100 text-sm text-gray-700 leading-relaxed">
+                                            <p class="mb-2">Untuk guru honorer yang ingin mendaftar PPPK, syarat mutlaknya adalah ijazah harus terbaca linier di sistem Dapodik. Berikut cara cek nyatanya:</p>
+                                            <ol class="list-decimal ml-5 space-y-2 bg-white p-4 rounded-lg border border-gray-100 mt-2">
+                                                <li>Kunjungi website resmi: <strong>info.gtk.kemdikbud.go.id</strong></li>
+                                                <li>Login menggunakan akun PTK (Pendidik dan Tenaga Kependidikan) yang sudah didaftarkan oleh operator sekolah di Dapodik.</li>
+                                                <li>Cari menu <strong>"Verval Ijazah"</strong>.</li>
+                                                <li>Pastikan status verval sudah <strong>"Selesai"</strong> dan API terbaca terkoneksi dengan PDDikti. Jika belum, Anda tidak akan bisa melanjutkan pendaftaran PPPK di portal SSCASN.</li>
+                                            </ol>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Accordion 2 -->
+                                <div class="border border-emerald-100 rounded-xl bg-emerald-50/30 overflow-hidden">
+                                    <button onclick="toggleAccordion('pppk-acc-2')" class="w-full flex justify-between items-center px-5 py-4 text-left hover:bg-emerald-50 transition-colors focus:outline-none">
+                                        <span class="font-bold text-emerald-900">2. Fokus pada Soal Pedagogik Praktis (Studi Kasus)</span>
+                                        <i id="icon-pppk-acc-2" class="fa-solid fa-chevron-down text-emerald-500 transition-transform duration-300"></i>
+                                    </button>
+                                    <div id="pppk-acc-2" class="accordion-content px-5">
+                                        <div class="py-4 border-t border-emerald-100 text-sm text-gray-700 leading-relaxed">
+                                            <p>Berbeda dengan CPNS yang menguji hitungan dan sejarah, tes PPPK (Kompetensi Teknis Guru) 70% berisi studi kasus cara Anda mengajar dan menangani siswa di kelas.</p>
+                                            <div class="mt-3 p-3 bg-gray-50 border-l-4 border-emerald-500 rounded-r">
+                                                <p class="font-bold text-xs text-emerald-700 uppercase mb-1">Contoh Studi Kasus:</p>
+                                                <p class="italic text-gray-600">"Saat Anda sedang menjelaskan materi, ada siswa di pojok kelas yang terus mengganggu temannya. Tindakan yang paling tepat sesuai prinsip pedagogik adalah..."</p>
+                                                <p class="text-xs mt-2 font-medium">Tips: Selalu pilih jawaban yang berpusat pada siswa (student-centered), persuasif, dan tidak menggunakan hukuman fisik/mempermalukan siswa.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: Swasta Internasional -->
+                    <div id="content-swasta" class="tab-content bg-white rounded-3xl shadow-xl border border-gray-100 p-8 md:p-10">
+                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-purple-100 text-purple-600 text-3xl mb-6">
+                            <i class="fa-solid fa-globe"></i>
+                        </div>
+                        <h3 class="text-3xl font-extrabold text-gray-900 mb-4">Sekolah Swasta Internasional</h3>
+                        
+                        <div class="mb-10">
+                            <h4 class="text-lg font-bold text-gray-900 mb-2 border-b-2 border-purple-100 pb-2 inline-block">Definisi Singkat</h4>
+                            <p class="text-gray-600 leading-relaxed mt-2">
+                                Berkarier di SPK (Satuan Pendidikan Kerjasama) atau sekolah swasta elit menawarkan lingkungan kerja yang dinamis, fasilitas modern, dan exposure ke kurikulum global (seperti Cambridge, IB, atau Montessori). Jalur ini menawarkan potensi finansial (gaji & benefit) yang kompetitif tanpa terikat sistem kenegaraan.
+                            </p>
+                        </div>
+
+                        <!-- Map Horizontal Seleksi Swasta -->
+                        <div class="mb-10 bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                            <h4 class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2"><i class="fa-solid fa-route text-purple-500"></i> Tahapan Seleksi Sekolah Swasta Internasional</h4>
+                            <div class="relative w-full overflow-x-auto pb-6 custom-scrollbar">
+                                <div class="min-w-[800px] flex justify-between relative px-4">
+                                    <!-- Line -->
+                                    <div class="absolute top-6 left-12 right-12 h-1 bg-gradient-to-r from-purple-200 via-purple-400 to-purple-200 z-0"></div>
+                                    
+                                    <!-- Nodes -->
+                                    <div class="relative z-10 flex flex-col items-center text-center w-32">
+                                        <div class="w-12 h-12 rounded-full bg-white text-purple-600 flex items-center justify-center text-lg font-bold shadow-md mb-3 ring-4 ring-purple-50">1</div>
+                                        <h5 class="font-bold text-sm text-gray-900">Application</h5>
+                                        <p class="text-xs text-gray-500 mt-1">CV & Cover Letter</p>
+                                    </div>
+                                    <div class="relative z-10 flex flex-col items-center text-center w-32">
+                                        <div class="w-12 h-12 rounded-full bg-white text-purple-600 flex items-center justify-center text-lg font-bold shadow-md mb-3 ring-4 ring-purple-50">2</div>
+                                        <h5 class="font-bold text-sm text-gray-900">HR Screening</h5>
+                                        <p class="text-xs text-gray-500 mt-1">Background Check</p>
+                                    </div>
+                                    <div class="relative z-10 flex flex-col items-center text-center w-32">
+                                        <div class="w-12 h-12 rounded-full bg-white text-purple-600 flex items-center justify-center text-lg font-bold shadow-md mb-3 ring-4 ring-purple-50">3</div>
+                                        <h5 class="font-bold text-sm text-gray-900">User Interview</h5>
+                                        <p class="text-xs text-gray-500 mt-1">Kepsek & Yayasan</p>
+                                    </div>
+                                    <div class="relative z-10 flex flex-col items-center text-center w-32">
+                                        <div class="w-12 h-12 rounded-full bg-white text-purple-600 flex items-center justify-center text-lg font-bold shadow-md mb-3 ring-4 ring-purple-50">4</div>
+                                        <h5 class="font-bold text-sm text-gray-900">Microteaching</h5>
+                                        <p class="text-xs text-gray-500 mt-1">Demo Mengajar (ENG)</p>
+                                    </div>
+                                    <div class="relative z-10 flex flex-col items-center text-center w-32">
+                                        <div class="w-12 h-12 rounded-full bg-purple-600 text-white flex items-center justify-center text-lg font-bold shadow-md mb-3 ring-4 ring-purple-100"><i class="fa-solid fa-file-contract"></i></div>
+                                        <h5 class="font-bold text-sm text-gray-900">Offering</h5>
+                                        <p class="text-xs text-gray-500 mt-1">Negosiasi Kontrak</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kiat Lolos Swasta -->
+                        <div>
+                            <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><i class="fa-solid fa-lightbulb text-yellow-500"></i> Kiat-kiat Lolos Sekolah Swasta Internasional</h4>
+                            <div class="flex flex-col gap-3">
+                                <!-- Accordion 1 -->
+                                <div class="border border-purple-100 rounded-xl bg-purple-50/30 overflow-hidden">
+                                    <button onclick="toggleAccordion('swasta-acc-1')" class="w-full flex justify-between items-center px-5 py-4 text-left hover:bg-purple-50 transition-colors focus:outline-none">
+                                        <span class="font-bold text-purple-900">1. Standar Skor TOEFL & IELTS Minimal</span>
+                                        <i id="icon-swasta-acc-1" class="fa-solid fa-chevron-down text-purple-500 transition-transform duration-300"></i>
+                                    </button>
+                                    <div id="swasta-acc-1" class="accordion-content px-5">
+                                        <div class="py-4 border-t border-purple-100 text-sm text-gray-700 leading-relaxed">
+                                            <p class="mb-2">Sekolah SPK (Satuan Pendidikan Kerjasama) menggunakan bahasa Inggris secara *full-time* di lingkungan sekolah. Mereka sangat ketat soal sertifikasi bahasa asing.</p>
+                                            <div class="grid grid-cols-2 gap-4 mt-3">
+                                                <div class="bg-white p-3 rounded shadow-sm border border-gray-100 text-center">
+                                                    <p class="text-xs text-gray-500 font-bold uppercase mb-1">TOEFL iBT</p>
+                                                    <p class="text-xl font-extrabold text-purple-700">80 - 100+</p>
+                                                </div>
+                                                <div class="bg-white p-3 rounded shadow-sm border border-gray-100 text-center">
+                                                    <p class="text-xs text-gray-500 font-bold uppercase mb-1">IELTS Academic</p>
+                                                    <p class="text-xl font-extrabold text-purple-700">6.5 - 7.5</p>
+                                                </div>
+                                            </div>
+                                            <p class="mt-3 text-xs bg-purple-100/50 p-2 rounded">
+                                                <em>Contoh nyata:</em> Sekolah top seperti Jakarta Intercultural School (JIS) atau British School Jakarta (BSJ) umumnya mematok IELTS band 7.0 untuk posisi *Homeroom Teacher*.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Accordion 2 -->
+                                <div class="border border-purple-100 rounded-xl bg-purple-50/30 overflow-hidden">
+                                    <button onclick="toggleAccordion('swasta-acc-2')" class="w-full flex justify-between items-center px-5 py-4 text-left hover:bg-purple-50 transition-colors focus:outline-none">
+                                        <span class="font-bold text-purple-900">2. Pahami Kurikulum Global (Cambridge / IB)</span>
+                                        <i id="icon-swasta-acc-2" class="fa-solid fa-chevron-down text-purple-500 transition-transform duration-300"></i>
+                                    </button>
+                                    <div id="swasta-acc-2" class="accordion-content px-5">
+                                        <div class="py-4 border-t border-purple-100 text-sm text-gray-700 leading-relaxed">
+                                            <p>Lulusan PGSD biasanya hanya menguasai Kurikulum Merdeka atau K13. Untuk lolos ke sekolah swasta premium, Anda harus familiar dengan kerangka kurikulum global.</p>
+                                            <ul class="list-disc ml-5 mt-2 space-y-2">
+                                                <li><strong>Cambridge Primary:</strong> Fokus pada fondasi Matematika, Bahasa Inggris, dan Sains. Banyak digunakan di sekolah nasional plus.</li>
+                                                <li><strong>IB PYP (Primary Years Programme):</strong> Sangat berfokus pada <em>Inquiry-based learning</em> (pembelajaran berbasis rasa ingin tahu). Anak diajak membuat proyek mandiri, bukan sekadar menghafal buku.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Peta Tahapan (Roadmap) Section -->
+    <section id="peta-tahapan" class="py-24 bg-primary-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16 fade-in">
+                <h2 class="text-sm font-bold text-primary-600 uppercase tracking-wide mb-2">Roadmap Karier</h2>
+                <h3 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Peta Tahapan Menuju Guru Profesional</h3>
+                <p class="text-gray-600 text-lg">Langkah demi langkah yang perlu kamu lalui semenjak duduk di bangku kuliah hingga berhasil meniti karier impianmu.</p>
+            </div>
+
+            <div class="timeline-container max-w-5xl mx-auto py-8">
+                
+                <!-- Step 1 -->
+                <div class="timeline-item left md:pr-12 md:text-right mb-12 fade-in">
+                    <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow relative z-10 timeline-content">
+                        <span class="text-primary-600 font-bold text-sm bg-primary-50 px-3 py-1 rounded-full mb-3 inline-block">Langkah 1</span>
+                        <h4 class="text-xl font-bold text-gray-900 mb-2">Lulus S1 PGSD</h4>
+                        <p class="text-gray-600 text-sm">
+                            Fokus selesaikan perkuliahan dengan IPK terbaik. Aktif dalam organisasi, asisten mengajar (Kampus Mengajar), dan perbanyak portofolio desain media pembelajaran.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="timeline-item right md:pl-12 mb-12 fade-in">
+                    <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow relative z-10 timeline-content">
+                        <span class="text-secondary font-bold text-sm bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full mb-3 inline-block">Langkah 2 (Sangat Disarankan)</span>
+                        <h4 class="text-xl font-bold text-gray-900 mb-2">Ikuti PPG Prajabatan</h4>
+                        <p class="text-gray-600 text-sm">
+                            Pendidikan Profesi Guru (PPG) adalah kunci utama saat ini. Lulusan PPG mendapatkan Sertifikat Pendidik (Serdik) yang memberikan afirmasi nilai 100% pada seleksi CPNS/PPPK dan sangat diakui sekolah internasional.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="timeline-item left md:pr-12 md:text-right mb-12 fade-in">
+                    <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow relative z-10 timeline-content">
+                        <span class="text-primary-600 font-bold text-sm bg-primary-50 px-3 py-1 rounded-full mb-3 inline-block">Langkah 3</span>
+                        <h4 class="text-xl font-bold text-gray-900 mb-2">Persiapan Administrasi & Skill</h4>
+                        <p class="text-gray-600 text-sm">
+                            Siapkan dokumen penting: Ijazah, Transkrip, KTP, SKCK. Khusus target <b>Sekolah Internasional</b>: tingkatkan skor TOEFL/IELTS dan pelajari kurikulum Cambridge/IB. Khusus <b>CASN</b>: Latihan soal SKD & SKB.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="timeline-item right md:pl-12 mb-12 fade-in">
+                    <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow relative z-10 timeline-content">
+                        <span class="text-primary-600 font-bold text-sm bg-primary-50 px-3 py-1 rounded-full mb-3 inline-block">Langkah 4</span>
+                        <h4 class="text-xl font-bold text-gray-900 mb-2">Proses Seleksi</h4>
+                        <p class="text-gray-600 text-sm">
+                            Pantau portal SSCASN BKN untuk pembukaan formasi CPNS/PPPK. Atau mulai kirimkan CV, Portofolio, dan <i>Cover Letter</i> (dalam Bahasa Inggris) ke HRD Sekolah Swasta/Internasional targetmu.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 5 -->
+                <div class="timeline-item left md:pr-12 md:text-right fade-in">
+                    <div class="bg-gradient-to-r from-primary-600 to-indigo-700 p-6 rounded-2xl shadow-lg border border-transparent relative z-10 timeline-content text-white">
+                        <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl mb-4 md:ml-auto">
+                            <i class="fa-solid fa-flag-checkered text-white"></i>
+                        </div>
+                        <h4 class="text-xl font-bold mb-2">Resmi Mengajar & Bangun Karier</h4>
+                        <p class="text-white/80 text-sm">
+                            Selamat! Perjalananmu dimulai. Terus tingkatkan kompetensi, ikuti seminar, dan jadilah guru SD yang menginspirasi generasi bangsa.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Persiapan/Tips Section -->
+    <section id="persiapan" class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-12 fade-in">
+                <div class="max-w-2xl">
+                    <h2 class="text-sm font-bold text-primary-600 uppercase tracking-wide mb-2">Persiapan Diri</h2>
+                    <h3 class="text-3xl md:text-4xl font-bold text-gray-900">Tips Sukses Seleksi</h3>
+                    <p class="mt-2 text-gray-500">Klik kartu di bawah ini untuk membaca panduan lengkapnya.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Tip 1 -->
+                <div class="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl transition-all transform hover:-translate-y-1 fade-in cursor-pointer group" onclick="openModal('tip1')">
+                    <div class="h-40 bg-gray-200 relative overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Belajar CPNS" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span class="bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-full"><i class="fa-solid fa-book-open mr-1"></i> Baca Artikel</span>
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">CASN</span>
+                        <h4 class="font-bold text-gray-900 mt-3 mb-2 leading-tight">Rahasia Lolos Passing Grade SKD CPNS</h4>
+                        <p class="text-gray-500 text-sm line-clamp-2">Strategi membagi waktu saat mengerjakan soal TWK, TIU, dan TKP agar skor maksimal.</p>
+                    </div>
+                </div>
+
+                <!-- Tip 2 -->
+                <div class="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl transition-all transform hover:-translate-y-1 fade-in cursor-pointer group" style="transition-delay: 100ms;" onclick="openModal('tip2')">
+                    <div class="h-40 bg-gray-200 relative overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Wawancara" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span class="bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-full"><i class="fa-solid fa-book-open mr-1"></i> Baca Artikel</span>
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <span class="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-1 rounded">Sekolah Swasta Internasional</span>
+                        <h4 class="font-bold text-gray-900 mt-3 mb-2 leading-tight">Tips Microteaching dalam Bahasa Inggris</h4>
+                        <p class="text-gray-500 text-sm line-clamp-2">Cara memukau HRD dan Kepala Sekolah saat demo mengajar menggunakan kurikulum global.</p>
+                    </div>
+                </div>
+
+                <!-- Tip 3 -->
+                <div class="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl transition-all transform hover:-translate-y-1 fade-in cursor-pointer group" style="transition-delay: 200ms;" onclick="openModal('tip3')">
+                    <div class="h-40 bg-gray-200 relative overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Portofolio" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span class="bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-full"><i class="fa-solid fa-book-open mr-1"></i> Baca Artikel</span>
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded">Umum</span>
+                        <h4 class="font-bold text-gray-900 mt-3 mb-2 leading-tight">Membuat Portofolio Guru yang Menarik</h4>
+                        <p class="text-gray-500 text-sm line-clamp-2">Kumpulkan RPP kreatif, media pembelajaran inovatif, dan dokumentasi mengajar.</p>
+                    </div>
+                </div>
+
+                <!-- Tip 4 -->
+                <div class="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl transition-all transform hover:-translate-y-1 fade-in cursor-pointer group" style="transition-delay: 300ms;" onclick="openModal('tip4')">
+                    <div class="h-40 bg-gray-200 relative overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="PPG" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span class="bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-full"><i class="fa-solid fa-book-open mr-1"></i> Baca Artikel</span>
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <span class="text-xs font-bold text-secondary bg-yellow-50 px-2 py-1 rounded">Sertifikasi</span>
+                        <h4 class="font-bold text-gray-900 mt-3 mb-2 leading-tight">Pentingnya Serdik (Sertifikat Pendidik)</h4>
+                        <p class="text-gray-500 text-sm line-clamp-2">Kenapa lulusan PGSD sangat direkomendasikan langsung mengambil PPG Prajabatan.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Asisten AI Section -->
+    <section id="tanya-ai" class="py-24 bg-gradient-to-b from-white to-primary-50 border-t border-gray-100 relative overflow-hidden">
+        <div class="absolute top-10 left-10 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute bottom-10 right-10 w-72 h-72 bg-purple-400/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-10 fade-in">
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 font-semibold text-sm mb-4 shadow-sm border border-blue-200">
+                    <i class="fa-solid fa-sparkles text-yellow-500"></i> Ditenagai oleh Google Gemini & Real-time Web Search
+                </div>
+                <h3 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Konsultasi Karier Bersama AI</h3>
+                <p class="text-gray-600 text-lg">Punya pertanyaan seputar jadwal CPNS/PPPK terbaru, info GTK, atau syarat sekolah internasional? Tanyakan langsung di sini!</p>
+            </div>
+
+            <!-- Chat Container -->
+            <div class="bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-200 overflow-hidden fade-in flex flex-col" style="height: 550px;">
+                
+                <!-- Chat Header -->
+                <div class="bg-gradient-to-r from-primary-600 to-indigo-700 p-4 flex items-center gap-4 text-white shadow-md relative z-10">
+                    <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl backdrop-blur-sm border border-white/30">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg leading-tight">Asisten EduKarier AI</h4>
+                        <p class="text-xs text-primary-100 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span> Siap Menjawab Pertanyaan Anda</p>
+                    </div>
+                </div>
+
+                <!-- Chat Messages Area -->
+                <div id="ai-chat-history" class="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50/80 custom-scrollbar scroll-smooth">
+                    
+                    <!-- Pesan Awal AI -->
+                    <div class="flex gap-4">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center flex-shrink-0 text-white shadow-md mt-1">
+                            <i class="fa-solid fa-robot text-sm"></i>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl rounded-tl-none border border-gray-200 shadow-sm text-gray-700 text-sm md:text-base max-w-[85%]">
+                            Halo calon pendidik hebat! 👋<br><br>
+                            Saya Asisten AI EduKarier yang siap membantu menjawab pertanyaan Anda terkait:
+                            <ul class="list-disc ml-5 mt-2 space-y-1 text-gray-600">
+                                <li>Informasi dan Prediksi Formasi CPNS/PPPK Guru</li>
+                                <li>Syarat administrasi dan cara cek Info GTK</li>
+                                <li>Tips tembus seleksi Sekolah Swasta Internasional</li>
+                            </ul>
+                            <br>
+                            <em>Ketik pertanyaan Anda di bawah ini! (contoh: "Bagaimana cara cek validitas ijazah PGSD di Info GTK?")</em>
+                        </div>
+                    </div>
+                    
+                </div>
+
+                <!-- Input Area -->
+                <div class="p-4 bg-white border-t border-gray-100 relative z-10">
+                    <div class="relative flex items-end gap-2">
+                        <textarea id="ai-user-input" rows="1" class="w-full bg-gray-50 border border-gray-300 rounded-2xl pl-4 pr-14 py-3.5 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none max-h-32 transition-all custom-scrollbar" placeholder="Ketik pertanyaan Anda di sini..." oninput="this.style.height = '';this.style.height = Math.min(this.scrollHeight, 128) + 'px'"></textarea>
+                        
+                        <button id="ai-send-btn" onclick="sendToGemini()" class="absolute right-2 bottom-2 bg-primary-600 hover:bg-primary-700 text-white w-10 h-10 rounded-xl flex items-center justify-center transition-all shadow-md transform hover:scale-105 active:scale-95 disabled:opacity-50">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Layout untuk Tips & Artikel -->
+    <div id="article-modal" class="fixed inset-0 z-[10000] hidden items-center justify-center px-4 sm:px-6">
+        <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity opacity-0" id="modal-backdrop" onclick="closeModal()"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col transform scale-95 opacity-0 transition-all duration-300 z-10" id="modal-panel">
+            
+            <!-- Header Modal -->
+            <div class="flex items-center justify-between p-5 border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                    <span id="modal-tag" class="text-xs font-bold px-3 py-1 rounded-full">Tag</span>
+                </div>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 focus:outline-none bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <!-- Content Modal -->
+            <div class="p-6 md:p-8 overflow-y-auto no-scrollbar" id="modal-content">
+                <h3 id="modal-title" class="text-2xl md:text-3xl font-bold text-gray-900 mb-6 leading-tight">Judul Artikel</h3>
+                <div id="modal-body" class="text-gray-600 space-y-4 text-base leading-relaxed">
+                    <!-- Konten dinamis disuntikkan lewat JS -->
+                </div>
+            </div>
+            
+            <!-- Footer Modal -->
+            <div class="p-5 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex justify-end">
+                <button onclick="closeModal()" class="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">Tutup Artikel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white pt-16 pb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+                <div class="col-span-1 md:col-span-2">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                        </div>
+                        <span class="font-bold text-2xl tracking-tight">Edu<span class="text-primary-500">Karier</span></span>
+                    </div>
+                    <p class="text-gray-400 mb-6 max-w-sm">
+                        Portal informasi dan panduan karier terpercaya untuk mahasiswa dan alumni Pendidikan Guru Sekolah Dasar (PGSD) di seluruh Indonesia.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-primary-600 hover:text-white transition-colors">
+                            <i class="fa-brands fa-instagram"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-primary-600 hover:text-white transition-colors">
+                            <i class="fa-brands fa-linkedin-in"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-primary-600 hover:text-white transition-colors">
+                            <i class="fa-brands fa-youtube"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Tautan Cepat</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#beranda" class="hover:text-white transition-colors">Beranda</a></li>
+                        <li><a href="#jalur-karier" class="hover:text-white transition-colors">Info CPNS & PPPK</a></li>
+                        <li><a href="#jalur-karier" class="hover:text-white transition-colors">Sekolah Internasional</a></li>
+                        <li><a href="#peta-tahapan" class="hover:text-white transition-colors">Roadmap Karier</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Bantuan</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition-colors">FAQ</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Kontak Kami</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Kebijakan Privasi</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center text-gray-500 text-sm">
+                <p>&copy; 2026 EduKarier PGSD. Dibuat untuk Guru SD Masa Depan.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript for Interactivity -->
+    <script>
+        function openMagicDoors() {
+            const doorLeft = document.getElementById('door-left');
+            const doorRight = document.getElementById('door-right');
+            const doorCenter = document.getElementById('door-center-content');
+            const introContainer = document.getElementById('intro-doors');
+
+            // Sembunyikan konten tengah
+            doorCenter.style.opacity = '0';
+            
+            // Geser pintu ke samping
+            doorLeft.style.transform = 'translateX(-100%)';
+            doorRight.style.transform = 'translateX(100%)';
+            
+            // Hapus overflow hidden dari body
+            document.body.style.overflow = 'auto';
+
+            // Fade out the overlay and remove from DOM to save resources
+            setTimeout(() => {
+                introContainer.style.opacity = '0';
+                setTimeout(() => {
+                    introContainer.style.display = 'none';
+                }, 700);
+            }, 1000);
+        }
+
+        // Mobile Menu Toggle
+        const btn = document.getElementById('mobile-menu-btn');
+        const menu = document.getElementById('mobile-menu');
+
+        btn.addEventListener('click', () => {
+            menu.classList.toggle('hidden');
+        });
+
+        // Close mobile menu when clicking a link
+        const mobileLinks = menu.querySelectorAll('a');
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                menu.classList.add('hidden');
+            });
+        });
+
+        // Scroll Animation Observer
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.15
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('appear');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach((element) => {
+            observer.observe(element);
+        });
+
+        // Fungsi untuk Navigasi Tab Layout
+        function openTab(tabId) {
+            // 1. Sembunyikan semua tab content
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // 2. Reset style semua tombol sidebar
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('active');
+                // Ganti class icon color text ke default
+                const icon = el.querySelector('.fa-solid');
+                if(el.id === 'btn-pppk' && icon) icon.classList.add('text-emerald-600');
+                if(el.id === 'btn-swasta' && icon) icon.classList.add('text-purple-600');
+            });
+
+            // 3. Tampilkan tab content yang dipilih
+            document.getElementById('content-' + tabId).classList.add('active');
+            
+            // 4. Tambahkan state active ke tombol yang diklik
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.add('active');
+            
+            // Atur warna teks khusus untuk active state agar senada dengan Tailwind theme
+            if (tabId === 'cpns') {
+                activeBtn.style.color = '#1d4ed8'; // blue-700
+                activeBtn.style.borderColor = '#2563eb'; // blue-600
+            } else if (tabId === 'pppk') {
+                activeBtn.style.color = '#047857'; // emerald-700
+                activeBtn.style.borderColor = '#059669'; // emerald-600
+            } else if (tabId === 'swasta') {
+                activeBtn.style.color = '#7e22ce'; // purple-700
+                activeBtn.style.borderColor = '#9333ea'; // purple-600
+            }
+        }
+
+        // Fungsi Toggle Accordion Kiat-kiat
+        function toggleAccordion(id) {
+            const content = document.getElementById(id);
+            const icon = document.getElementById('icon-' + id);
+            
+            // Jika konten saat ini tertutup
+            if (!content.classList.contains('open')) {
+                // Tutup semua accordion di dalam tab yang sama terlebih dahulu (opsional)
+                const parentTab = content.closest('.tab-content');
+                parentTab.querySelectorAll('.accordion-content').forEach(el => {
+                    el.classList.remove('open');
+                    el.style.paddingTop = '0px';
+                    el.style.paddingBottom = '0px';
+                });
+                parentTab.querySelectorAll('.fa-chevron-down').forEach(el => {
+                    el.style.transform = 'rotate(0deg)';
+                });
+
+                // Buka yang diklik
+                content.classList.add('open');
+                content.style.paddingTop = '0px';
+                content.style.paddingBottom = '16px';
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                // Tutup yang diklik
+                content.classList.remove('open');
+                content.style.paddingTop = '0px';
+                content.style.paddingBottom = '0px';
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Data Konten untuk Modal Artikel Tips
+        const tipsData = {
+            tip1: {
+                title: "Rahasia Lolos Passing Grade SKD CPNS",
+                tag: "CASN",
+                tagColor: "bg-blue-100 text-blue-700",
+                content: `
+                    <p class="font-medium text-gray-800">Seleksi Kompetensi Dasar (SKD) adalah tahapan yang menggugurkan ratusan ribu pelamar. Terdiri dari TWK, TIU, dan TKP.</p>
+                    <div class="my-6">
+                        <h4 class="font-bold text-gray-900 text-lg mb-2">1. Strategi Manajemen Waktu (Total 100 Menit)</h4>
+                        <ul class="list-disc ml-5 space-y-2">
+                            <li><strong>Mulai dari TKP (Kerjakan ± 35 menit):</strong> Soalnya panjang-panjang, tapi tidak ada jawaban salah (nilai 1-5). Cari jawaban yang paling ideal, melayani publik dengan baik, dan profesional.</li>
+                            <li><strong>Lanjut TIU (Kerjakan ± 40 menit):</strong> Butuh coret-coretan hitungan dan logika. Kerjakan silogisme dan deret angka terlebih dahulu. Jika menemukan soal hitungan rumit, langsung lewati agar waktu tidak habis!</li>
+                            <li><strong>Terakhir TWK (Kerjakan ± 25 menit):</strong> Ujian hafalan sejarah, pasal UUD, dan nilai Pancasila. Jawab menggunakan insting pertama, jangan terlalu lama menganalisis.</li>
+                        </ul>
+                    </div>
+                    <div class="my-6 bg-blue-50 p-4 rounded-xl border border-blue-100">
+                        <h4 class="font-bold text-blue-900 text-lg mb-2">2. Awas Jebakan Nilai Ambang Batas!</h4>
+                        <p class="mb-2">Banyak peserta gagal di TKP karena passing gradenya paling tinggi (contoh: 166). Untuk aman:</p>
+                        <ul class="list-disc ml-5 text-blue-800">
+                            <li>Fokus pilih jawaban dengan tema jejaring kerja (bekerja sama).</li>
+                            <li>Pilih jawaban tentang anti-radikalisme (hindari jawaban ekstrem).</li>
+                            <li>Pilih jawaban pemanfaatan TIK (teknologi informasi) di tempat kerja.</li>
+                        </ul>
+                    </div>
+                `
+            },
+            tip2: {
+                title: "Tips Microteaching dalam Bahasa Inggris",
+                tag: "Sekolah Swasta Internasional",
+                tagColor: "bg-purple-100 text-purple-700",
+                content: `
+                    <p class="font-medium text-gray-800">Demo mengajar (Microteaching) di sekolah internasional biasanya berdurasi 15-20 menit dan diuji langsung oleh ekspatriat (Principal) dan HRD.</p>
+                    <div class="my-6">
+                        <h4 class="font-bold text-gray-900 text-lg mb-2">1. Jangan Terlalu Banyak Ceramah (Teacher-Centered)</h4>
+                        <p class="mb-2">Sekolah internasional membenci guru yang hanya "berbicara satu arah". Mereka mencari fasilitator. Terapkan metode <strong>Inquiry-Based Learning</strong>. Biarkan anak-anak yang menemukan jawaban dari pertanyaan pemantik yang Anda berikan.</p>
+                    </div>
+                    <div class="my-6">
+                        <h4 class="font-bold text-gray-900 text-lg mb-2">2. Bahasa Tubuh & Penggunaan Bahasa Inggris</h4>
+                        <ul class="list-disc ml-5 space-y-2">
+                            <li>Gunakan artikulasi yang jelas, tidak perlu logat British/American palsu, yang penting <em>grammar</em> benar dan terdengar percaya diri.</li>
+                            <li>Beri apresiasi konstan (contoh: <em>"That's an insightful observation, Sarah!"</em>).</li>
+                            <li>Siapkan alat peraga fisik (realia) yang menarik, hindari hanya menggunakan slide PPT biasa.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-200 mt-4 text-yellow-800">
+                        <strong>Pro Tip:</strong> Siapkan <em>Lesson Plan</em> (RPP) singkat maksimal 2 halaman menggunakan bahasa Inggris dan bagikan kepada para penguji sebelum Anda mulai demo.
+                    </div>
+                `
+            },
+            tip3: {
+                title: "Membuat Portofolio Guru yang Menarik",
+                tag: "Umum",
+                tagColor: "bg-green-100 text-green-700",
+                content: `
+                    <p class="font-medium text-gray-800">Di era digital, CV saja tidak cukup. Anda membutuhkan portofolio untuk membuktikan "bagaimana cara Anda mengajar".</p>
+                    <div class="my-6">
+                        <h4 class="font-bold text-gray-900 text-lg mb-2">Platform yang Bisa Digunakan</h4>
+                        <p>Jangan cetak dokumen tebal. Buatlah website portofolio gratis menggunakan <strong>Google Sites</strong>, <strong>Notion</strong>, atau <strong>Canva Website</strong>. Cantumkan link tersebut di CV Anda (gunakan juga QR Code).</p>
+                    </div>
+                    <div class="my-6">
+                        <h4 class="font-bold text-gray-900 text-lg mb-2">Isi Portofolio Wajib:</h4>
+                        <ul class="list-disc ml-5 space-y-3">
+                            <li><strong>Video Mengajar Pendek (3-5 Menit):</strong> Rekaman Anda mengajar nyata di kelas saat PPL / Kampus Mengajar. Tunjukkan interaksi dengan siswa.</li>
+                            <li><strong>Desain Media Ajar:</strong> Screenshot LKPD (Lembar Kerja) interaktif buatan sendiri, slide Canva, atau alat peraga yang pernah Anda ciptakan.</li>
+                            <li><strong>Foto Kegiatan Ekstrakurikuler:</strong> Bukti bahwa Anda aktif bersosialisasi dan bisa membimbing siswa di luar kelas akademik (Pramuka, Kesenian, dll).</li>
+                        </ul>
+                    </div>
+                `
+            },
+            tip4: {
+                title: "Pentingnya Serdik (Sertifikat Pendidik)",
+                tag: "Sertifikasi",
+                tagColor: "bg-yellow-100 text-yellow-700",
+                content: `
+                    <p class="font-medium text-gray-800">Setelah lulus S1 PGSD, Anda bergelar S.Pd. Namun, secara hukum di Indonesia, untuk diakui secara legal dan profesional sebagai seorang "Guru", Anda membutuhkan Sertifikat Pendidik.</p>
+                    <div class="my-6">
+                        <h4 class="font-bold text-gray-900 text-lg mb-2">Keuntungan Serdik bagi Lulusan PGSD:</h4>
+                        <ol class="list-decimal ml-5 space-y-3">
+                            <li><strong>Jalan Tol Lulus CPNS:</strong> Jika Anda mendaftar CPNS formasi Guru, nilai SKB Anda langsung mendapatkan afirmasi maksimal (100%). Anda hanya perlu fokus lulus SKD.</li>
+                            <li><strong>Tunjangan Profesi Guru (TPG):</strong> Setelah diangkat menjadi ASN atau masuk sekolah yayasan yang terdaftar di dapodik, Anda berhak menerima tambahan gaji sebesar 1x gaji pokok setiap bulan.</li>
+                            <li><strong>Nilai Jual di Sekolah Elit:</strong> Sekolah internasional/swasta sangat menghargai Serdik karena membuktikan Anda telah diuji kelayakan pedagogik dan kepribadiannya secara nasional.</li>
+                        </ol>
+                    </div>
+                    <div class="my-6 bg-blue-50 p-4 rounded-xl border border-blue-100">
+                        <h4 class="font-bold text-blue-900 text-lg mb-2">Bagaimana Cara Mendapatkannya?</h4>
+                        <p>Bagi fresh graduate, segera daftarkan diri Anda pada program <strong>PPG Prajabatan</strong> yang diadakan oleh Kemendikbud. Biasanya memakan waktu 2 semester (1 tahun) dan disubsidi penuh oleh pemerintah (gratis!).</p>
+                    </div>
+                `
+            }
+        };
+
+        // Fungsi Membuka Modal
+        function openModal(tipId) {
+            const modal = document.getElementById('article-modal');
+            const backdrop = document.getElementById('modal-backdrop');
+            const panel = document.getElementById('modal-panel');
+            const data = tipsData[tipId];
+
+            if(!data) return;
+
+            // Set Data
+            document.getElementById('modal-title').innerText = data.title;
+            document.getElementById('modal-body').innerHTML = data.content;
+            
+            const tagEl = document.getElementById('modal-tag');
+            tagEl.innerText = data.tag;
+            tagEl.className = "text-xs font-bold px-3 py-1 rounded-full " + data.tagColor;
+
+            // Tampilkan Modal
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // Animasi Masuk
+            setTimeout(() => {
+                backdrop.classList.remove('opacity-0');
+                backdrop.classList.add('opacity-100');
+                panel.classList.remove('opacity-0', 'scale-95');
+                panel.classList.add('opacity-100', 'scale-100');
+            }, 10);
+            
+            // Nonaktifkan scroll pada body utama
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Fungsi Menutup Modal
+        function closeModal() {
+            const modal = document.getElementById('article-modal');
+            const backdrop = document.getElementById('modal-backdrop');
+            const panel = document.getElementById('modal-panel');
+
+            // Animasi Keluar
+            backdrop.classList.remove('opacity-100');
+            backdrop.classList.add('opacity-0');
+            panel.classList.remove('opacity-100', 'scale-100');
+            panel.classList.add('opacity-0', 'scale-95');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                
+                // Aktifkan scroll kembali JIKA bukan di state intro door
+                if (document.getElementById('intro-doors').style.display !== 'none') {
+                    document.body.style.overflow = 'auto'; 
+                }
+            }, 300);
+        }
+
+        // Konfigurasi Marked.js untuk render Markdown ke HTML secara aman
+        marked.setOptions({
+            breaks: true,
+            gfm: true
+        });
+
+        // Event Listener untuk Enter pada Chat AI
+        document.getElementById('ai-user-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendToGemini();
+            }
+        });
+
+        async function sendToGemini() {
+            const inputEl = document.getElementById('ai-user-input');
+            const sendBtn = document.getElementById('ai-send-btn');
+            const userText = inputEl.value.trim();
+
+            if (!userText) return;
+
+            appendMessage('user', userText);
+            inputEl.value = '';
+            inputEl.style.height = ''; 
+            inputEl.disabled = true;
+            sendBtn.disabled = true;
+
+            const loadingId = appendLoading();
+
+            try {
+                const systemPrompt = "Anda adalah 'Asisten EduKarier', seorang konsultan karier AI profesional yang khusus membantu mahasiswa dan lulusan S1 PGSD (Pendidikan Guru Sekolah Dasar) di Indonesia. Jawablah menggunakan bahasa Indonesia yang ramah, profesional, dan informatif. Jika ditanya tentang info CPNS/PPPK terbaru, cari beritanya secara aktual.";
+                const apiKey = ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                const payload = {
+                    contents: [{ role: 'user', parts: [{ text: userText }] }],
+                    tools: [{ "google_search": {} }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] }
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error("Terjadi kendala saat menghubungi server AI.");
+
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    const aiMarkdownText = candidate.content.parts[0].text;
+                    let aiHtmlContent = marked.parse(aiMarkdownText);
+                    
+                    let sourceHtml = '';
+                    const groundingMetadata = candidate.groundingMetadata;
+                    
+                    if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                        const sources = groundingMetadata.groundingAttributions
+                            .map(attr => ({ uri: attr.web?.uri, title: attr.web?.title }))
+                            .filter(src => src.uri && src.title);
+                            
+                        const uniqueSources = Array.from(new Map(sources.map(item => [item.uri, item])).values());
+                            
+                        if (uniqueSources.length > 0) {
+                            sourceHtml = `
+                                <div class="mt-4 pt-3 border-t border-gray-200/60 bg-gray-50/50 p-3 rounded-xl">
+                                    <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                        <i class="fa-brands fa-google text-blue-500"></i> Sumber Referensi:
+                                    </p>
+                                    <ul class="flex flex-col gap-1.5">
+                            `;
+                            uniqueSources.slice(0, 3).forEach(src => {
+                                sourceHtml += `
+                                    <li class="text-xs truncate">
+                                        <a href="${src.uri}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline flex items-center gap-1.5">
+                                            <i class="fa-solid fa-link text-gray-400 text-[10px]"></i> ${src.title}
+                                        </a>
+                                    </li>
+                                `;
+                            });
+                            sourceHtml += `</ul></div>`;
+                        }
+                    }
+
+                    removeLoading(loadingId);
+                    appendMessage('ai', aiHtmlContent + sourceHtml);
+                } else {
+                    throw new Error("Format respons AI tidak dikenali.");
+                }
+            } catch (error) {
+                console.error(error);
+                removeLoading(loadingId);
+                appendMessage('ai', `<p class="text-red-600"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Maaf, koneksi AI sedang sibuk. Silakan coba beberapa saat lagi.</p>`);
+            } finally {
+                inputEl.disabled = false;
+                sendBtn.disabled = false;
+                inputEl.focus();
+            }
+        }
+
+        function appendMessage(role, htmlContent) {
+            const chatHistory = document.getElementById('ai-chat-history');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'flex gap-3 md:gap-4 fade-in appear w-full';
+            
+            if (role === 'user') {
+                msgDiv.classList.add('flex-row-reverse');
+                msgDiv.innerHTML = `
+                    <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 mt-1 shadow-sm border border-gray-300">
+                        <i class="fa-solid fa-user text-gray-500 text-sm"></i>
+                    </div>
+                    <div class="bg-primary-600 text-white p-4 rounded-2xl rounded-tr-none shadow-md text-sm md:text-base max-w-[85%] md:max-w-[75%] break-words">
+                        ${htmlContent.replace(/</g, "&lt;").replace(/>/g, "&gt;")}
+                    </div>
+                `;
+            } else {
+                msgDiv.innerHTML = `
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center flex-shrink-0 text-white shadow-md mt-1">
+                        <i class="fa-solid fa-robot text-sm"></i>
+                    </div>
+                    <div class="bg-white p-4 md:p-5 rounded-2xl rounded-tl-none border border-gray-200 shadow-sm text-gray-700 text-sm md:text-base max-w-[90%] md:max-w-[80%] leading-relaxed prose prose-sm md:prose-base prose-blue max-w-none">
+                        ${htmlContent}
+                    </div>
+                `;
+            }
+            chatHistory.appendChild(msgDiv);
+            
+            setTimeout(() => {
+                chatHistory.scrollTo({
+                    top: chatHistory.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }, 50);
+        }
+
+        function appendLoading() {
+            const chatHistory = document.getElementById('ai-chat-history');
+            const id = 'loading-' + Date.now();
+            const msgDiv = document.createElement('div');
+            msgDiv.id = id;
+            msgDiv.className = 'flex gap-3 md:gap-4 w-full';
+            msgDiv.innerHTML = `
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center flex-shrink-0 text-white shadow-md mt-1 opacity-70">
+                    <i class="fa-solid fa-robot text-sm"></i>
+                </div>
+                <div class="bg-white p-4 rounded-2xl rounded-tl-none border border-gray-200 shadow-sm flex items-center gap-2 max-w-max">
+                    <div class="flex items-center gap-1.5 px-2 py-1">
+                        <span class="w-2 h-2 bg-primary-400 rounded-full animate-bounce"></span>
+                        <span class="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style="animation-delay: 0.15s"></span>
+                        <span class="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style="animation-delay: 0.3s"></span>
+                    </div>
+                    <span class="text-xs text-gray-400 italic mr-2">Sedang mencari informasi...</span>
+                </div>
+            `;
+            chatHistory.appendChild(msgDiv);
+            chatHistory.scrollTo({ top: chatHistory.scrollHeight, behavior: 'smooth' });
+            return id;
+        }
+
+        function removeLoading(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+    </script>
+</body>
+</html>
